@@ -1,20 +1,16 @@
 {% extends "base.html" %}
 
-
 {% block body %}
 
 <form method="POST" action="/chart">
-    <label for="selected_swimmer">Choose an event:</label>
+    <label for="selected_swimmer">Choose a Swimmer:</label>
 
-    <select name="event" id="event">
-
-        {% for event in timestamps %}
-
-        <option value="{{event}}">{{ event }}</option>
-
+    <select name="selected_swimmer" id="selected_swimmer">
+        {% for swimmer in swimmer_data %}
+        <option value="{{ swimmer[0] }}">{{ swimmer[1] }}</option>
         {% endfor %}
-
     </select>
+
     <p>
         <input type="submit" value="Select">
     </p>

@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 
-
 {% block body %}
 
-<form method="POST" action="/displayevents">
-    <label for="swimmer">Choose a swimmer:</label>
+<form method="POST" action="/display_swimmers">
+    <label for="selected_date">Choose a date:</label>
 
-    <select name="swimmer" id="swimmer">
+    <select name="selected_date" id="selected_date">
 
-        {% for swimmer in data %}
-
-        <option value="{{swimmer}}">{{ swimmer }}</option>
-
+        {% for date in timestamps %}
+        <option value="{{ date }}">{{ date }}</option>
         {% endfor %}
 
     </select>
