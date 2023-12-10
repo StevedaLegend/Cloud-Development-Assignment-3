@@ -1,85 +1,48 @@
 from flask import Flask, render_template, request
-import os
-import hfpy_utils
-import swim_utils  # Assuming you have a swim_utils module
+import DBcm
 
-# Student Name: Steve Fasoranti
-# Student Number: C00275756
 app = Flask(__name__)
+
+config = {
+    "user": "swimmeruser",
+    "password": "swimmers",
+    "database": "swimclubdb",
+    "host": "localhost",
+    "port": 3308,
+}
 
 
 @app.route("/")
-def get_swimmers_names():
-    files = os.listdir(swim_utils.FOLDER)
-    files.remove(".DS_Store")
-    names = set()
-    for swimmer in files:
-        names.add(swim_utils.get_swimmers_data(swimmer)[0])
-    return render_template(
-        "select.html",
-        title="Select a swimmer to chart",
-        data=sorted(names),
-    )
+def select_training_session():
+    get_dates_query = """SELECT DISTINCT DATE(ts) AS Date FROM times"""
+    # Fetch timestamps from the database
+    with DBcm.UseDatabase(config) as db:
+        db.execute(get_dates_query)
+        timestamps = db.fetchall()
+    print(timestamps)
+    dates = [row[0] for row in timestamps]
+
+    return render_template("events.html", timestamps=dates)
 
 
-@app.route("/displayevents", methods=["POST"])
-def display_events():
-    selected_swimmer = request.form.get("swimmer")
+# @app.route("/display_swimmers", methods=["POST"])
+# def display_swimmers():
+#     selected_timestamp_id = request.form.get("timestamp_id")
 
-    if selected_swimmer:
-        files = os.listdir(swim_utils.FOLDER)
-        files.remove(".DS_Store")
+#     if selected_timestamp_id:
+#         # Fetch swimmers based on the selected timestamp from the database
+#         with DBcm.UseDatabase(config) as db:
+#             db.execute(
+#                 """
+#                 SELECT swimmer_id, event_id, time, ts
+#                 FROM times
+#                 WHERE timestamp_id = %s
+#                 """,
+#                 (selected_timestamp_id,),
+#             )
+#             swimmer_data = db.fetchall()
 
-        events = [
-            file
-            for file in files
-            if file.startswith(selected_swimmer) and file.endswith(".txt")
-        ]
-
-        txtremove = [event.removesuffix(".txt") for event in events]
-
-        return render_template(
-            "events.html",
-            title="Select an event to chart",
-            data=sorted(txtremove),
-            selected_swimmer=selected_swimmer,
-        )
-
-
-@app.post("/chart")
-def display_chart():
-    selected_swimmer = request.form.get("event")
-
-    if selected_swimmer:
-        if not selected_swimmer.endswith(".txt"):
-            selected_swimmer += ".txt"
-        (
-            name,
-            age,
-            distance,
-            stroke,
-            the_times,
-            converts,
-            the_average,
-        ) = swim_utils.get_swimmers_data(selected_swimmer)
-
-        the_title = f"{name} (Under {age}) {distance} {stroke}"
-        from_max = max(converts) + 50
-        the_converts = [
-            hfpy_utils.convert2range(n, 0, from_max, 0, 350) for n in converts
-        ]
-
-        the_converts.reverse()
-        the_times.reverse()
-
-        the_data = zip(the_converts, the_times)
-
-        return render_template(
-            "chart.html",
-            title=the_title,
-            average=the_average,
-            data=the_data,
-        )
+#         return render_template("select.html", swimmer_data=swimmer_data)
 
 
 if __name__ == "__main__":
